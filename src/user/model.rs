@@ -11,6 +11,7 @@ pub enum Rank {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct User {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub object_id: Option<ObjectId>,
