@@ -17,3 +17,4 @@ resend-rs = "0.9.1"
 chrono = { version = "0.4.38", features = ["serde"] }
 bson = { version = "2.13.0", features = ["chrono-0_4"] }
 serde_with = "3.11.0"
+axum-extra = { version = "0.9.4", features = ["typed-header"] }
