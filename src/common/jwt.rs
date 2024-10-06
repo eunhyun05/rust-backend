@@ -29,6 +29,7 @@ pub fn generate_jwt(object_id: ObjectId, secret: &str) -> String {
     ).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn validate_jwt(token: &str) -> Result<TokenData<Claims>, Error> {
     let decoding_key = DecodingKey::from_secret(CONFIG.jwt_secret.as_ref());
     decode::<Claims>(token, &decoding_key, &Validation::default())
