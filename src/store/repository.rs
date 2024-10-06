@@ -10,6 +10,12 @@ impl MongoRepository {
         Ok(store.inserted_id.as_object_id().unwrap())
     }
 
+    pub async fn delete_store(&self, store_name: &str) -> Result<bool> {
+        let filter = doc! { "name": store_name };
+        let result = self.store_collection.delete_one(filter).await?;
+        Ok(result.deleted_count > 0)
+    }
+
     pub async fn find_store_by_name(&self, name: &str) -> Option<Store> {
         let filter = doc! { "name": name };
         self.store_collection.find_one(filter).await.unwrap_or(None)
