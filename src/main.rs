@@ -7,7 +7,7 @@ use std::sync::Arc;
 use axum::{routing::post, Extension, Router};
 use crate::config::Config;
 use crate::database::MongoRepository;
-use crate::user::handler::register_user;
+use crate::user::handler::{login_user, register_user};
 
 #[tokio::main]
 async fn main() {
@@ -15,6 +15,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/auth/register", post(register_user))
+        .route("/api/auth/login", post(login_user))
         .layer(Extension(Arc::new(mongo_repo)));
 
     let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", &Config::from_env().server_port))
