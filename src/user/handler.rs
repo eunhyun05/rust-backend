@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http::{HeaderMap, StatusCode};
 use axum::{Json, Router};
 use axum::response::IntoResponse;
 use bcrypt::{hash, verify, DEFAULT_COST};
@@ -10,7 +10,7 @@ use crate::common::types::Status;
 use crate::database::MongoRepository;
 use crate::common::response::ErrorResponse;
 use crate::config::CONFIG;
-use crate::user::model::{LoginRequest, RegisterRequest, User, UserResponse};
+use crate::user::model::{LoginRequest, Rank, RegisterRequest, User, UserResponse};
 
 pub fn user_routes() -> Router {
     Router::new()
@@ -19,9 +19,20 @@ pub fn user_routes() -> Router {
 }
 
 pub async fn register_user(
+    headers: HeaderMap,
     Extension(mongo_repo): Extension<Arc<MongoRepository>>,
     Json(body): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
+    let store_name = headers.get("X-Store-Name").and_then(|h| h.to_str().ok());
+
+    if store_name.is_none() {
+        let error_response = ErrorResponse {
+            status: Status::Failure,
+            message: "스토어 이름을 제공해주세요.".to_string(),
+        };
+        return Ok((StatusCode::BAD_REQUEST, Json(error_response)).into_response());
+    }
+
     if body.password != body.confirm_password {
         let error_response = ErrorResponse {
             status: Status::Failure,
@@ -58,16 +69,19 @@ pub async fn register_user(
     };
 
     let new_user = User {
+        store_id: None,
+        object_id: None,
         username: body.username.clone(),
         email: body.email.clone(),
         password: hashed_password,
+        rank: Rank::Customer,
     };
 
     let result = mongo_repo.create_user(new_user.clone()).await;
 
     match result {
         Ok(_) => {
-            let token = generate_jwt(&body.username, &CONFIG.jwt_secret);
+            let token = generate_jwt(result.unwrap().to_string().parse().unwrap(), &CONFIG.jwt_secret);
 
             let response = UserResponse {
                 status: Status::Success,
@@ -119,7 +133,18 @@ pub async fn login_user(
         return Ok((StatusCode::UNAUTHORIZED, Json(error_response)).into_response());
     }
 
-    let token = generate_jwt(&user.username, &CONFIG.jwt_secret);
+    let user_object_id = match user.object_id {
+        Some(id) => id,
+        None => {
+            let error_response = ErrorResponse {
+                status: Status::Error,
+                message: "유저 정보가 유효하지 않습니다.".to_string(),
+            };
+            return Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(error_response)).into_response());
+        }
+    };
+
+    let token = generate_jwt(user_object_id, &CONFIG.jwt_secret);
 
     let response = UserResponse {
         status: Status::Success,

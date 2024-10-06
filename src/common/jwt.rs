@@ -1,21 +1,24 @@
-use jsonwebtoken::{encode, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
+use jsonwebtoken::errors::Error;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
+use bson::oid::ObjectId;
+use crate::config::CONFIG;
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    exp: usize,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Claims {
+    pub id: String,
+    pub exp: usize,
 }
 
-pub fn generate_jwt(username: &str, secret: &str) -> String {
+pub fn generate_jwt(object_id: ObjectId, secret: &str) -> String {
     let expiration = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         + Duration::from_secs(60 * 60 * 24 * 30);
 
     let claims = Claims {
-        sub: username.to_owned(),
+        id: object_id.to_hex(),
         exp: expiration.as_secs() as usize,
     };
 
@@ -24,4 +27,9 @@ pub fn generate_jwt(username: &str, secret: &str) -> String {
         &claims,
         &EncodingKey::from_secret(secret.as_ref()),
     ).unwrap()
+}
+
+pub fn validate_jwt(token: &str) -> Result<TokenData<Claims>, Error> {
+    let decoding_key = DecodingKey::from_secret(CONFIG.jwt_secret.as_ref());
+    decode::<Claims>(token, &decoding_key, &Validation::default())
 }

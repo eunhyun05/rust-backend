@@ -10,6 +10,11 @@ impl MongoRepository {
         Ok(user.inserted_id.as_object_id().unwrap())
     }
 
+    pub async fn find_user_by_id(&self, id: &ObjectId) -> Option<User> {
+        let filter = doc! { "_id": id };
+        self.user_collection.find_one(filter).await.unwrap_or(None)
+    }
+
     pub async fn find_user_by_email(&self, email: &str) -> Option<User> {
         let filter = doc! { "email": email };
         self.user_collection.find_one(filter).await.unwrap_or(None)

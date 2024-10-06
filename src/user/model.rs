@@ -1,11 +1,24 @@
+use bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 use crate::common::types::Status;
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum Rank {
+    Customer,
+    Vip,
+    Administrator,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub object_id: Option<ObjectId>,
+    pub store_id: Option<ObjectId>,
     pub username: String,
     pub email: String,
     pub password: String,
+    pub rank: Rank,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
