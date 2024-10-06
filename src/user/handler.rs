@@ -1,15 +1,22 @@
 use axum::http::StatusCode;
-use axum::Json;
+use axum::{Json, Router};
 use axum::response::IntoResponse;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use std::sync::Arc;
 use axum::extract::Extension;
+use axum::routing::post;
 use crate::common::jwt::generate_jwt;
 use crate::common::types::Status;
 use crate::database::MongoRepository;
 use crate::common::response::ErrorResponse;
 use crate::config::Config;
 use crate::user::model::{LoginRequest, RegisterRequest, User, UserResponse};
+
+pub fn user_routes() -> Router {
+    Router::new()
+        .route("/api/auth/register", post(register_user))
+        .route("/api/auth/login", post(login_user))
+}
 
 pub async fn register_user(
     Extension(mongo_repo): Extension<Arc<MongoRepository>>,
