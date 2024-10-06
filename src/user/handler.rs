@@ -9,12 +9,20 @@ use crate::common::types::Status;
 use crate::database::MongoRepository;
 use crate::common::response::ErrorResponse;
 use crate::config::Config;
-use crate::user::model::{User, UserResponse};
+use crate::user::model::{RegisterRequest, User, UserResponse};
 
 pub async fn register_user(
     Extension(mongo_repo): Extension<Arc<MongoRepository>>,
-    Json(mut body): Json<User>,
+    Json(body): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
+    if body.password != body.confirm_password {
+        let error_response = ErrorResponse {
+            status: Status::Failure,
+            message: "비밀번호와 비밀번호 확인이 일치하지 않습니다.".to_string(),
+        };
+        return Ok((StatusCode::BAD_REQUEST, Json(error_response)).into_response());
+    }
+
     if let Some(_) = mongo_repo.find_user_by_email(&body.email).await {
         let error_response = ErrorResponse {
             status: Status::Failure,
@@ -42,9 +50,13 @@ pub async fn register_user(
         }
     };
 
-    body.password = hashed_password;
+    let new_user = User {
+        username: body.username.clone(),
+        email: body.email.clone(),
+        password: hashed_password,
+    };
 
-    let result = mongo_repo.create_user(body.clone()).await;
+    let result = mongo_repo.create_user(new_user.clone()).await;
 
     match result {
         Ok(_) => {
