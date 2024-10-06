@@ -32,12 +32,7 @@ impl Store {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CreateStoreRequest {
-    pub name: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CreateStoreResponse {
+pub struct StoreResponse {
     pub status: Status,
     pub store: Store,
 }
