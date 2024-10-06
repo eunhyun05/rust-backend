@@ -41,7 +41,7 @@ pub async fn register_user(
     if let Some(_) = mongo_repo.find_user_by_username(&body.username).await {
         let error_response = ErrorResponse {
             status: Status::Failure,
-            message: "이미 사용중인 유저이름입니다.".to_string(),
+            message: "이미 사용중인 유저 이름입니다.".to_string(),
         };
         return Ok((StatusCode::CONFLICT, Json(error_response)).into_response());
     }
