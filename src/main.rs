@@ -2,6 +2,7 @@ mod database;
 mod user;
 mod common;
 mod config;
+mod store;
 
 use std::sync::Arc;
 use axum::{Extension, Router};
@@ -14,6 +15,7 @@ async fn main() {
 
     let app = Router::new()
         .merge(user::handler::user_routes())
+        .merge(store::handler::store_routes())
         .layer(Extension(Arc::new(mongo_repo)));
 
     let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", &CONFIG.server_port))
