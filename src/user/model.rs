@@ -13,3 +13,12 @@ pub struct UserResponse {
     pub status: Status,
     pub token: String,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RegisterRequest {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+    pub confirm_password: String,
+}
