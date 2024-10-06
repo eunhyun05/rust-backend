@@ -45,10 +45,10 @@ pub async fn register_user(
         return Ok((StatusCode::CONFLICT, Json(error_response)).into_response());
     }
 
-    if let Some(_) = mongo_repo.find_user_by_username(&store.object_id.unwrap(), &body.username).await {
+    if let Some(_) = mongo_repo.find_user_by_user_id(&store.object_id.unwrap(), &body.user_id).await {
         let error_response = ErrorResponse {
             status: Status::Failure,
-            message: "이미 사용중인 유저 이름입니다.".to_string(),
+            message: "이미 사용중인 유저 아이디입니다.".to_string(),
         };
         return Ok((StatusCode::CONFLICT, Json(error_response)).into_response());
     }
@@ -67,7 +67,7 @@ pub async fn register_user(
     let new_user = User {
         store_id: store.object_id,
         object_id: None,
-        username: body.username.clone(),
+        user_id: body.user_id.clone(),
         email: body.email.clone(),
         password: hashed_password,
         rank: Rank::Customer,
@@ -105,7 +105,7 @@ pub async fn login_user(
         Err(err) => return Ok(err.into_response()),
     };
 
-    let user = match mongo_repo.find_user_by_username(&store.object_id.unwrap(), &body.username).await {
+    let user = match mongo_repo.find_user_by_user_id(&store.object_id.unwrap(), &body.user_id).await {
         Some(user) => user,
         None => {
             let error_response = ErrorResponse {

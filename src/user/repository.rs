@@ -21,8 +21,8 @@ impl MongoRepository {
         self.user_collection.find_one(filter).await.unwrap_or(None)
     }
 
-    pub async fn find_user_by_username(&self, store_id: &ObjectId, username: &str) -> Option<User> {
-        let filter = doc! { "storeId": store_id, "username": username };
+    pub async fn find_user_by_user_id(&self, store_id: &ObjectId, user_id: &str) -> Option<User> {
+        let filter = doc! { "storeId": store_id, "userId": user_id };
         self.user_collection.find_one(filter).await.unwrap_or(None)
     }
 }

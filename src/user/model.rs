@@ -16,7 +16,7 @@ pub struct User {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub object_id: Option<ObjectId>,
     pub store_id: Option<ObjectId>,
-    pub username: String,
+    pub user_id: String,
     pub email: String,
     pub password: String,
     pub rank: Rank,
@@ -31,7 +31,7 @@ pub struct UserResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterRequest {
-    pub username: String,
+    pub user_id: String,
     pub email: String,
     pub password: String,
     pub confirm_password: String,
@@ -39,6 +39,6 @@ pub struct RegisterRequest {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LoginRequest {
-    pub username: String,
+    pub user_id: String,
     pub password: String,
 }
