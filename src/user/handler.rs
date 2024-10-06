@@ -10,6 +10,7 @@ use crate::common::types::Status;
 use crate::database::MongoRepository;
 use crate::common::response::ErrorResponse;
 use crate::config::CONFIG;
+use crate::store::helper::get_store_from_headers;
 use crate::user::model::{LoginRequest, Rank, RegisterRequest, User, UserResponse};
 
 pub fn user_routes() -> Router {
@@ -23,15 +24,10 @@ pub async fn register_user(
     Extension(mongo_repo): Extension<Arc<MongoRepository>>,
     Json(body): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let store_name = headers.get("X-Store-Name").and_then(|h| h.to_str().ok());
-
-    if store_name.is_none() {
-        let error_response = ErrorResponse {
-            status: Status::Failure,
-            message: "스토어 이름을 제공해주세요.".to_string(),
-        };
-        return Ok((StatusCode::BAD_REQUEST, Json(error_response)).into_response());
-    }
+    let store = match get_store_from_headers(&headers, &mongo_repo).await {
+        Ok(store) => store,
+        Err(err) => return Ok(err.into_response()),
+    };
 
     if body.password != body.confirm_password {
         let error_response = ErrorResponse {
@@ -41,7 +37,7 @@ pub async fn register_user(
         return Ok((StatusCode::BAD_REQUEST, Json(error_response)).into_response());
     }
 
-    if let Some(_) = mongo_repo.find_user_by_email(&body.email).await {
+    if let Some(_) = mongo_repo.find_user_by_email(&store.object_id.unwrap(), &body.email).await {
         let error_response = ErrorResponse {
             status: Status::Failure,
             message: "이미 가입된 이메일입니다.".to_string(),
@@ -49,7 +45,7 @@ pub async fn register_user(
         return Ok((StatusCode::CONFLICT, Json(error_response)).into_response());
     }
 
-    if let Some(_) = mongo_repo.find_user_by_username(&body.username).await {
+    if let Some(_) = mongo_repo.find_user_by_username(&store.object_id.unwrap(), &body.username).await {
         let error_response = ErrorResponse {
             status: Status::Failure,
             message: "이미 사용중인 유저 이름입니다.".to_string(),
@@ -69,7 +65,7 @@ pub async fn register_user(
     };
 
     let new_user = User {
-        store_id: None,
+        store_id: store.object_id,
         object_id: None,
         username: body.username.clone(),
         email: body.email.clone(),
@@ -100,10 +96,16 @@ pub async fn register_user(
 }
 
 pub async fn login_user(
+    headers: HeaderMap,
     Extension(mongo_repo): Extension<Arc<MongoRepository>>,
     Json(body): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let user = match mongo_repo.find_user_by_username(&body.username).await {
+    let store = match get_store_from_headers(&headers, &mongo_repo).await {
+        Ok(store) => store,
+        Err(err) => return Ok(err.into_response()),
+    };
+
+    let user = match mongo_repo.find_user_by_username(&store.object_id.unwrap(), &body.username).await {
         Some(user) => user,
         None => {
             let error_response = ErrorResponse {
