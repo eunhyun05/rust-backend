@@ -8,6 +8,7 @@ pub struct Config {
     pub database_name: String,
     pub jwt_secret: String,
     pub resend_api_key: String,
+    pub vronix_security_key: String,
 }
 
 pub static CONFIG: Lazy<Config> = Lazy::new(|| {
@@ -18,6 +19,7 @@ pub static CONFIG: Lazy<Config> = Lazy::new(|| {
     let database_name = env::var("DATABASE_NAME").expect("DATABASE_NAME이 설정되지 않았습니다.");
     let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET가 설정되지 않았습니다.");
     let resend_api_key = env::var("RESEND_API_KEY").expect("RESEND_API_KEY가 설정되지 않았습니다.");
+    let vronix_security_key = env::var("VRONIX_SECURITY_KEY").expect("VRONIX_SECURITY_KEY가 설정되지 않았습니다.");
 
     Config {
         server_port,
@@ -25,5 +27,6 @@ pub static CONFIG: Lazy<Config> = Lazy::new(|| {
         database_name,
         jwt_secret,
         resend_api_key,
+        vronix_security_key,
     }
 });
