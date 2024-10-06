@@ -47,7 +47,7 @@ pub async fn create_store(
         }
     };
 
-    let user = match mongo_repo.find_user_by_id(&user_id).await {
+    let user = match mongo_repo.find_user_by_id(&*body.name, &user_id).await {
         Some(user) => user,
         None => {
             let error_response = ErrorResponse {
