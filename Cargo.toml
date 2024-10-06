@@ -14,3 +14,6 @@ jsonwebtoken = "9.3.0"
 dotenv = "0.15.0"
 once_cell = "1.20.2"
 resend-rs = "0.9.1"
+chrono = { version = "0.4.38", features = ["serde"] }
+bson = { version = "2.13.0", features = ["chrono-0_4"] }
+serde_with = "3.11.0"
