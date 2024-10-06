@@ -5,7 +5,7 @@ mod config;
 
 use std::sync::Arc;
 use axum::{Extension, Router};
-use crate::config::Config;
+use crate::config::CONFIG;
 use crate::database::MongoRepository;
 
 #[tokio::main]
@@ -16,7 +16,7 @@ async fn main() {
         .merge(user::handler::user_routes())
         .layer(Extension(Arc::new(mongo_repo)));
 
-    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", &Config::from_env().server_port))
+    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", &CONFIG.server_port))
         .await
         .unwrap();
     println!("listening on {}", listener.local_addr().unwrap());

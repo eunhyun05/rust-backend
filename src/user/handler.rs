@@ -9,7 +9,7 @@ use crate::common::jwt::generate_jwt;
 use crate::common::types::Status;
 use crate::database::MongoRepository;
 use crate::common::response::ErrorResponse;
-use crate::config::Config;
+use crate::config::CONFIG;
 use crate::user::model::{LoginRequest, RegisterRequest, User, UserResponse};
 
 pub fn user_routes() -> Router {
@@ -51,7 +51,7 @@ pub async fn register_user(
         Err(_) => {
             let error_response = ErrorResponse {
                 status: Status::Error,
-                message: "비밀번호를 해시하는 과정에 오류가 발생하였습니다.".to_string(),
+                message: "비밀번호 해시화에 실패했습니다.".to_string(),
             };
             return Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(error_response)).into_response());
         }
@@ -67,7 +67,7 @@ pub async fn register_user(
 
     match result {
         Ok(_) => {
-            let token = generate_jwt(&body.username, &*Config::from_env().jwt_secret);
+            let token = generate_jwt(&body.username, &CONFIG.jwt_secret);
 
             let response = UserResponse {
                 status: Status::Success,
@@ -119,7 +119,7 @@ pub async fn login_user(
         return Ok((StatusCode::UNAUTHORIZED, Json(error_response)).into_response());
     }
 
-    let token = generate_jwt(&user.username, &*Config::from_env().jwt_secret);
+    let token = generate_jwt(&user.username, &CONFIG.jwt_secret);
 
     let response = UserResponse {
         status: Status::Success,
