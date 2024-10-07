@@ -4,6 +4,7 @@ use crate::category::model::Category;
 use crate::category::product::model::Product;
 use crate::database::MongoRepository;
 
+#[allow(dead_code)]
 impl MongoRepository {
     pub async fn add_product_to_category(
         &self,
