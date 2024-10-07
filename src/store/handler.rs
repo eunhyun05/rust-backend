@@ -3,7 +3,7 @@ use axum::{Extension, Json, Router};
 use axum::extract::Path;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
-use axum::routing::{delete, post};
+use axum::routing::{delete, patch, post};
 use crate::common::response::ErrorResponse;
 use crate::common::types::Status;
 use crate::database::MongoRepository;
@@ -14,6 +14,7 @@ pub fn store_routes() -> Router {
     Router::new()
         .route("/api/store/:store_name", post(create_store))
         .route("/api/store/:store_name", delete(delete_store))
+        .route("/api/store/:store_name/:new_store_name", patch(rename_store))
 }
 
 pub async fn create_store(
@@ -85,6 +86,51 @@ pub async fn delete_store(
             let error_response = ErrorResponse {
                 status: Status::Error,
                 message: "스토어 삭제에 실패하였습니다.".to_string(),
+            };
+            Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(error_response)).into_response())
+        }
+    }
+}
+
+pub async fn rename_store(
+    headers: HeaderMap,
+    Path((store_name, new_store_name)): Path<(String, String)>,
+    Extension(mongo_repo): Extension<Arc<MongoRepository>>,
+) -> Result<impl IntoResponse, StatusCode> {
+    if let Err(err) = validate_security_key(&headers) {
+        return Ok(err.into_response());
+    }
+
+    let existing_store = mongo_repo.find_store_by_name(&store_name).await;
+    if existing_store.is_none() {
+        let error_response = ErrorResponse {
+            status: Status::Failure,
+            message: format!("스토어 '{}'를 찾을 수 없습니다.", store_name),
+        };
+        return Ok((StatusCode::NOT_FOUND, Json(error_response)).into_response());
+    }
+
+    let result = mongo_repo.rename_store(&store_name, &new_store_name).await;
+
+    match result {
+        Ok(true) => {
+            let response = ErrorResponse {
+                status: Status::Success,
+                message: format!("스토어 이름 '{}'에서 '{}'로 성공적으로 변경되었습니다.", store_name, new_store_name),
+            };
+            Ok((StatusCode::OK, Json(response)).into_response())
+        }
+        Ok(false) => {
+            let error_response = ErrorResponse {
+                status: Status::Failure,
+                message: format!("스토어 이름 '{}'을 변경하는 데 실패하였습니다.", store_name),
+            };
+            Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(error_response)).into_response())
+        }
+        Err(_) => {
+            let error_response = ErrorResponse {
+                status: Status::Error,
+                message: "스토어 이름 변경에 실패하였습니다.".to_string(),
             };
             Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(error_response)).into_response())
         }

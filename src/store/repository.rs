@@ -20,4 +20,12 @@ impl MongoRepository {
         let filter = doc! { "name": name };
         self.store_collection.find_one(filter).await.unwrap_or(None)
     }
+
+    pub async fn rename_store(&self, old_name: &str, new_name: &str) -> Result<bool> {
+        let filter = doc! { "name": old_name };
+        let update = doc! { "$set": { "name": new_name } };
+
+        let result = self.store_collection.update_one(filter, update).await?;
+        Ok(result.modified_count > 0)
+    }
 }
