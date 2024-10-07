@@ -12,7 +12,7 @@ impl MongoRepository {
 
     #[allow(dead_code)]
     pub async fn find_user_by_id(&self, store_name: &str, id: &ObjectId) -> Option<User> {
-        let filter = doc! { "_id": id, "storeName": store_name };
+        let filter = doc! { "_id": id, "store_name": store_name };
         self.user_collection.find_one(filter).await.unwrap_or(None)
     }
 
@@ -22,7 +22,7 @@ impl MongoRepository {
     }
 
     pub async fn find_user_by_user_id(&self, store_id: &ObjectId, user_id: &str) -> Option<User> {
-        let filter = doc! { "storeId": store_id, "userId": user_id };
+        let filter = doc! { "storeId": store_id, "user_id": user_id };
         self.user_collection.find_one(filter).await.unwrap_or(None)
     }
 }
