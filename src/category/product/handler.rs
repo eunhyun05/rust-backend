@@ -3,16 +3,18 @@ use axum::extract::Path;
 use axum::http::{HeaderMap, StatusCode};
 use axum::{Extension, Json, Router};
 use axum::response::IntoResponse;
-use axum::routing::{delete, post};
+use axum::routing::{delete, patch, post};
 use bson::oid::ObjectId;
-use crate::category::product::helper::get_category_from_store;
+use crate::category::product::helper::{find_product_in_category, get_category_from_store};
 use crate::category::product::model::{CreateProductRequest, Product, ProductResponse};
 use crate::common::response::ErrorResponse;
 use crate::common::types::Status;
 use crate::database::MongoRepository;
 use crate::store::helper::get_store_from_headers;
+use crate::user::helper::{validate_user_rank};
+use crate::user::model::Rank;
 
-pub fn category_product_routes() -> Router {
+pub fn product_routes() -> Router {
     Router::new()
         .route("/api/category/:category_name/product", post(create_product))
         .route("/api/category/:category_name/product/:product_name", delete(delete_product))
@@ -28,6 +30,10 @@ pub async fn create_product(
         Ok(store) => store,
         Err(err) => return Ok(err.into_response()),
     };
+
+    if let Err(err) = validate_user_rank(&headers, Rank::Administrator, &mongo_repo).await {
+        return Ok(err.into_response());
+    }
 
     let category = match get_category_from_store(&store.object_id, &category_name, &mongo_repo).await {
         Ok(category) => category,
@@ -76,21 +82,18 @@ pub async fn delete_product(
         Err(err) => return Ok(err.into_response()),
     };
 
-    let category = match get_category_from_store(&Some(store.clone()).unwrap().object_id, &category_name, &mongo_repo).await {
+    if let Err(err) = validate_user_rank(&headers, Rank::Administrator, &mongo_repo).await {
+        return Ok(err.into_response());
+    }
+
+    let mut category = match get_category_from_store(&store.object_id, &category_name, &mongo_repo).await {
         Ok(category) => category,
         Err(err) => return Ok(err.into_response()),
     };
 
-    let product = category.products.iter().find(|p| p.name == product_name);
-    let product = match product {
-        Some(p) => p,
-        None => {
-            let error_response = ErrorResponse {
-                status: Status::Failure,
-                message: format!("제품 '{}'를 찾을 수 없습니다.", product_name),
-            };
-            return Ok((StatusCode::NOT_FOUND, Json(error_response)).into_response());
-        }
+    let product = match find_product_in_category(&mut category, &product_name) {
+        Ok(p) => p,
+        Err(err) => return Ok(err.into_response()),
     };
 
     let product_id = match product.object_id {

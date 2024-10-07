@@ -18,7 +18,8 @@ async fn main() {
         .merge(user::handler::user_routes())
         .merge(store::handler::store_routes())
         .merge(category::handler::category_routes())
-        .merge(category::product::handler::category_product_routes())
+        .merge(category::product::handler::product_routes())
+        .merge(category::product::stock::handler::stock_routes())
         .layer(Extension(Arc::new(mongo_repo)));
 
     let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", &CONFIG.server_port))

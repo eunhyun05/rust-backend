@@ -77,7 +77,7 @@ pub async fn register_user(
 
     match result {
         Ok(_) => {
-            let token = generate_jwt(result.unwrap().to_string().parse().unwrap(), &CONFIG.jwt_secret);
+            let token = generate_jwt(result.unwrap().to_string().parse().unwrap(), store.object_id.unwrap(), &CONFIG.jwt_secret);
 
             let response = UserResponse {
                 status: Status::Success,
@@ -146,7 +146,7 @@ pub async fn login_user(
         }
     };
 
-    let token = generate_jwt(user_object_id, &CONFIG.jwt_secret);
+    let token = generate_jwt(user_object_id, store.object_id.unwrap(), &CONFIG.jwt_secret);
 
     let response = UserResponse {
         status: Status::Success,

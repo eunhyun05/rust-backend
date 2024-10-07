@@ -8,10 +8,11 @@ use crate::config::CONFIG;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Claims {
     pub id: String,
+    pub store_id: String,
     pub exp: usize,
 }
 
-pub fn generate_jwt(object_id: ObjectId, secret: &str) -> String {
+pub fn generate_jwt(object_id: ObjectId, store_id: ObjectId, secret: &str) -> String {
     let expiration = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
@@ -19,6 +20,7 @@ pub fn generate_jwt(object_id: ObjectId, secret: &str) -> String {
 
     let claims = Claims {
         id: object_id.to_hex(),
+        store_id: store_id.to_hex(),
         exp: expiration.as_secs() as usize,
     };
 

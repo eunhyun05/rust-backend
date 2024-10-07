@@ -22,3 +22,20 @@ pub async fn get_category_from_store(
         }
     }
 }
+
+pub fn find_product_in_category<'a>(
+    category: &'a mut Category,
+    product_name: &str,
+) -> Result<&'a mut crate::category::product::model::Product, (StatusCode, Json<ErrorResponse>)> {
+    let product = category.products.iter_mut().find(|p| p.name == product_name);
+    match product {
+        Some(p) => Ok(p),
+        None => {
+            let error_response = ErrorResponse {
+                status: Status::Failure,
+                message: format!("제품 '{}'를 찾을 수 없습니다.", product_name),
+            };
+            Err((StatusCode::NOT_FOUND, Json(error_response)))
+        }
+    }
+}

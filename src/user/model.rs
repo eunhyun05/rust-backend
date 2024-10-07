@@ -2,7 +2,7 @@ use bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 use crate::common::types::Status;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, PartialOrd)]
 #[serde(rename_all = "camelCase")]
 pub enum Rank {
     Customer,

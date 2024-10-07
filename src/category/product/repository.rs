@@ -46,4 +46,21 @@ impl MongoRepository {
 
         category.and_then(|c| c.products.into_iter().find(|p| p.object_id == Some(product_id)))
     }
+
+    pub async fn update_product_stock(
+        &self,
+        store_id: &ObjectId,
+        category_name: &str,
+        product_name: &str,
+        stock: &Vec<String>,
+    ) -> mongodb::error::Result<()> {
+        let filter = doc! {
+            "store_id": store_id,
+            "name": category_name,
+            "products.name": product_name,
+        };
+        let update = doc! { "$set": { "products.$.stock": stock } };
+        self.category_collection.update_one(filter, update).await?;
+        Ok(())
+    }
 }
