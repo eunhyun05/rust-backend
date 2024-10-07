@@ -17,12 +17,12 @@ impl MongoRepository {
     }
 
     pub async fn find_user_by_email(&self, store_id: &ObjectId, email: &str) -> Option<User> {
-        let filter = doc! { "storeId": store_id, "email": email };
+        let filter = doc! { "store_id": store_id, "email": email };
         self.user_collection.find_one(filter).await.unwrap_or(None)
     }
 
     pub async fn find_user_by_user_id(&self, store_id: &ObjectId, user_id: &str) -> Option<User> {
-        let filter = doc! { "storeId": store_id, "user_id": user_id };
+        let filter = doc! { "store_id": store_id, "user_id": user_id };
         self.user_collection.find_one(filter).await.unwrap_or(None)
     }
 }
