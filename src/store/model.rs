@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use crate::common::types::Status;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Store {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub object_id: Option<ObjectId>,
